@@ -69,6 +69,40 @@ TiDB Cloud Serverless
 
 ---
 
+## 環境削除（シャットダウン手順）
+
+費用が発生するリソースを止めるときは以下の順番で削除する。
+
+### 1. Vercel プロジェクト削除
+
+https://vercel.com/optimisukes-projects/kobe-population-insight/settings
+
+Settings → **Delete Project**
+
+### 2. TiDB Cloud クラスター削除
+
+https://tidbcloud.com/
+
+対象クラスター → **...** → **Delete**
+
+> Serverless は月5GBまで無料だが、念のため使わないなら削除する
+
+### 3. OpenAI API キー無効化（任意）
+
+https://platform.openai.com/api-keys
+
+該当キーの **Revoke** ボタン
+
+> キーを残しておくと第三者に漏洩した際のリスクになる
+
+### 4. GitHub リポジトリ削除（任意）
+
+https://github.com/optimisuke/kobe-population-insight
+
+Settings → **Delete this repository**
+
+---
+
 ## 旧 Getting Started
 
 ```bash
