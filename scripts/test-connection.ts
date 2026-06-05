@@ -11,7 +11,8 @@ async function main() {
     fullResult: true,
   });
   console.log("接続成功 ✓");
-  console.log("TiDB バージョン:", result.rows[0].v);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.log("TiDB バージョン:", ((result.rows ?? []) as any)[0]?.v);
 }
 
 main().catch((e) => {

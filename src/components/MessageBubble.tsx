@@ -1,3 +1,6 @@
+"use client";
+import ReactMarkdown from "react-markdown";
+
 type SearchMode = "sql" | "fts" | "vector";
 
 function safeHref(url: string): string {
@@ -15,6 +18,11 @@ export type Message = {
   searchModes?: SearchMode[];
   sources?: { title: string; url: string }[];
   chunks?: { source: string; excerpt: string }[];
+  sqlResult?: {
+    params: Record<string, unknown>;
+    rowCount: number;
+    rows: Record<string, unknown>[];
+  };
 };
 
 const BADGE: Record<SearchMode, { label: string; className: string }> = {
@@ -55,13 +63,13 @@ export function MessageBubble({ message }: { message: Message }) {
       <div className="max-w-[88%] space-y-1">
         {/* 本文カード */}
         <div className="bg-white border-l-4 border-l-red-500 border border-slate-200 rounded-r-2xl rounded-bl-2xl px-4 py-3 shadow-sm">
-          <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
-            {message.content}
-          </p>
+          <div className="text-sm text-slate-800 leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1 prose-table:text-xs prose-th:py-1 prose-td:py-1">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
         </div>
 
         {/* 検索詳細アコーディオン */}
-        {hasMeta && (
+        {(message.searchModes && message.searchModes.length > 0) && (
           <details className="group">
             <summary className="flex items-center gap-2 px-2 py-1 cursor-pointer list-none text-xs text-slate-400 hover:text-slate-600 select-none">
               <span className="transition-transform group-open:rotate-90">▶</span>
@@ -81,6 +89,63 @@ export function MessageBubble({ message }: { message: Message }) {
             </summary>
 
             <div className="mt-1 ml-2 space-y-2">
+              {/* SQL クエリ結果 */}
+              {message.sqlResult && (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                      SQL Result
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      {message.sqlResult.rowCount} rows
+                    </p>
+                  </div>
+                  {/* 抽出パラメータ */}
+                  <div className="flex flex-wrap gap-1">
+                    {Object.entries(message.sqlResult.params)
+                      .filter(([, v]) => v !== null)
+                      .map(([k, v]) => (
+                        <span
+                          key={k}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-sky-50 border border-sky-200 rounded text-[10px] text-sky-700"
+                        >
+                          <span className="opacity-60">{k}:</span> {String(v)}
+                        </span>
+                      ))}
+                  </div>
+                  {/* 先頭数行プレビュー */}
+                  {message.sqlResult.rows.length > 0 && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[10px] text-slate-600">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            {Object.keys(message.sqlResult.rows[0]).map((k) => (
+                              <th
+                                key={k}
+                                className="text-left py-0.5 pr-3 text-slate-400 font-medium"
+                              >
+                                {k}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {message.sqlResult.rows.slice(0, 5).map((row, i) => (
+                            <tr key={i} className="border-b border-slate-100">
+                              {Object.values(row).map((v, j) => (
+                                <td key={j} className="py-0.5 pr-3">
+                                  {String(v)}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* 参照チャンク */}
               {message.chunks && message.chunks.length > 0 && (
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">

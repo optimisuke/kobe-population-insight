@@ -15,6 +15,11 @@ export type OrchestratorResult = {
   searchModes: SearchMode[];
   sources: { title: string; url: string }[];
   chunks?: { source: string; excerpt: string }[];
+  sqlResult?: {
+    params: Record<string, unknown>;
+    rowCount: number;
+    rows: Record<string, unknown>[];
+  };
 };
 
 export type HistoryMessage = {
@@ -87,6 +92,7 @@ export async function orchestrate(
   let policyContext = "";
   const sources: { title: string; url: string }[] = [];
   const chunks: { source: string; excerpt: string }[] = [];
+  let sqlResult: OrchestratorResult["sqlResult"];
 
   const tasks: Promise<void>[] = [];
 
@@ -95,6 +101,11 @@ export async function orchestrate(
       sqlSearch(question).then((r) => {
         sqlContext = formatSqlRows(r);
         searchModes.push("sql");
+        sqlResult = {
+          params: r.params as Record<string, unknown>,
+          rowCount: r.rows.length,
+          rows: r.rows.slice(0, 10),
+        };
       })
     );
   }
@@ -170,5 +181,5 @@ export async function orchestrate(
     (s, i) => sources.findIndex((t) => t.url === s.url) === i
   );
 
-  return { answer, searchModes, sources: uniqueSources, chunks };
+  return { answer, searchModes, sources: uniqueSources, chunks, sqlResult };
 }

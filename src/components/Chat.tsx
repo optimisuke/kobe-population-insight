@@ -70,6 +70,7 @@ export function Chat() {
           searchModes: data.searchModes,
           sources: data.sources,
           chunks: data.chunks,
+          sqlResult: data.sqlResult,
         },
       ]);
     } catch {
