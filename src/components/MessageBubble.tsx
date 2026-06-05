@@ -1,5 +1,6 @@
 "use client";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type SearchMode = "sql" | "fts" | "vector";
 
@@ -65,7 +66,7 @@ export function MessageBubble({ message }: { message: Message }) {
         {/* 本文カード */}
         <div className="bg-white border-l-4 border-l-red-500 border border-slate-200 rounded-r-2xl rounded-bl-2xl px-4 py-3 shadow-sm">
           <div className="text-sm text-slate-800 leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1 prose-table:text-xs prose-th:py-1 prose-td:py-1">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           </div>
         </div>
 

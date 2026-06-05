@@ -26,10 +26,12 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Mock mode
-          </div>
+          {(!process.env.TIDB_HOST || !process.env.OPENAI_API_KEY) && (
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Mock mode
+            </div>
+          )}
         </div>
       </header>
 
