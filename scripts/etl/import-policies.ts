@@ -17,7 +17,7 @@ const pdfParse = require("pdf-parse") as (
   buffer: Buffer
 ) => Promise<{ text: string }>;
 import OpenAI from "openai";
-import "dotenv/config";
+import { config } from "dotenv"; config({ path: ".env.local" });
 
 const DATA_DIR = join(process.cwd(), "data", "policy");
 const CHUNK_SIZE = 800;
@@ -56,14 +56,9 @@ async function embedBatch(
 }
 
 async function main() {
-  const conn = connect({
-    host: process.env.TIDB_HOST!,
-    port: Number(process.env.TIDB_PORT ?? 4000),
-    user: process.env.TIDB_USER!,
-    password: process.env.TIDB_PASSWORD!,
-    database: process.env.TIDB_DATABASE,
-    ssl: { minVersion: "TLSv1.2" },
-  });
+  const { TIDB_HOST, TIDB_USER, TIDB_PASSWORD, TIDB_PORT, TIDB_DATABASE } = process.env;
+  const url = `mysql://${TIDB_USER}:${TIDB_PASSWORD}@${TIDB_HOST}:${TIDB_PORT ?? 4000}/${TIDB_DATABASE ?? "kobe_population"}?ssl=true`;
+  const conn = connect({ url });
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   // クリア（再実行用）
