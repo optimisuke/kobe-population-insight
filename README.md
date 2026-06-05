@@ -67,6 +67,26 @@ TiDB Cloud Serverless
   └─ policy_chunks   (政策文書チャンク + VECTOR(1536))
 ```
 
+## Vercel デプロイ
+
+```bash
+vercel --prod
+```
+
+Vercel Dashboard の Environment Variables に以下を設定する（`.env.example` 参照）。
+
+```
+TIDB_HOST=
+TIDB_PORT=
+TIDB_USER=
+TIDB_PASSWORD=
+TIDB_DATABASE=
+OPENAI_API_KEY=
+AUTH_PASSWORD=   # 簡易認証用。未設定なら認証スキップ
+```
+
+> `@tidbcloud/serverless` は HTTP 経由で接続するため、VPC ピアリング等の追加設定は不要。
+
 ## テスト
 
 ```bash
