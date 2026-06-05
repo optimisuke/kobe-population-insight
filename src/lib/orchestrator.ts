@@ -14,7 +14,8 @@ export type OrchestratorResult = {
   answer: string;
   searchModes: SearchMode[];
   sources: { title: string; url: string }[];
-  chunks?: { source: string; excerpt: string }[];
+  chunks?: { source: string; excerpt: string; by: ("fts" | "vector")[] }[];
+  ftsKeywords?: string[];
   sqlResult?: {
     params: Record<string, unknown>;
     rowCount: number;
@@ -91,8 +92,9 @@ export async function orchestrate(
   let sqlContext = "";
   let policyContext = "";
   const sources: { title: string; url: string }[] = [];
-  const chunks: { source: string; excerpt: string }[] = [];
+  const chunks: { source: string; excerpt: string; by: ("fts" | "vector")[] }[] = [];
   let sqlResult: OrchestratorResult["sqlResult"];
+  let ftsKeywords: string[] = [];
 
   const tasks: Promise<void>[] = [];
 
@@ -113,7 +115,15 @@ export async function orchestrate(
   if (plan.needsPolicy) {
     tasks.push(
       Promise.all([ftsSearch(question, 3), vectorSearch(question, 3)]).then(
-        ([ftsChunks, vecChunks]) => {
+        ([ftsResult, vecChunks]) => {
+          const ftsChunks = ftsResult.chunks;
+          ftsKeywords = ftsResult.keywords;
+
+          // IDごとにどちらの検索でヒットしたか記録
+          const ftsIds = new Set(ftsChunks.map((c) => c.id));
+          const vecIds = new Set(vecChunks.map((c) => c.id));
+
+          // 重複排除しつつ順序を保持
           const seen = new Set<number>();
           const combined: (FtsResult | VectorResult)[] = [];
           for (const c of [...ftsChunks, ...vecChunks]) {
@@ -122,15 +132,20 @@ export async function orchestrate(
               combined.push(c);
             }
           }
+
           policyContext = formatPolicyChunks(combined.slice(0, 5));
           if (ftsChunks.length > 0) searchModes.push("fts");
           if (vecChunks.length > 0) searchModes.push("vector");
 
           for (const c of combined.slice(0, 5)) {
             sources.push({ title: c.source_title, url: c.source_url });
+            const by: ("fts" | "vector")[] = [];
+            if (ftsIds.has(c.id)) by.push("fts");
+            if (vecIds.has(c.id)) by.push("vector");
             chunks.push({
               source: c.source_title,
               excerpt: c.chunk_text.substring(0, 200),
+              by,
             });
           }
         }
@@ -181,5 +196,5 @@ export async function orchestrate(
     (s, i) => sources.findIndex((t) => t.url === s.url) === i
   );
 
-  return { answer, searchModes, sources: uniqueSources, chunks, sqlResult };
+  return { answer, searchModes, sources: uniqueSources, chunks, ftsKeywords: ftsKeywords.length > 0 ? ftsKeywords : undefined, sqlResult };
 }

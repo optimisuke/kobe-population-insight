@@ -17,7 +17,8 @@ export type Message = {
   content: string;
   searchModes?: SearchMode[];
   sources?: { title: string; url: string }[];
-  chunks?: { source: string; excerpt: string }[];
+  chunks?: { source: string; excerpt: string; by: ("fts" | "vector")[] }[];
+  ftsKeywords?: string[];
   sqlResult?: {
     params: Record<string, unknown>;
     rowCount: number;
@@ -149,14 +150,32 @@ export function MessageBubble({ message }: { message: Message }) {
               {/* 参照チャンク */}
               {message.chunks && message.chunks.length > 0 && (
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
-                    Retrieved Chunks
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                      Retrieved Chunks
+                    </p>
+                    {/* FTSキーワード */}
+                    {message.ftsKeywords && message.ftsKeywords.length > 0 && (
+                      <div className="flex items-center gap-1 flex-wrap justify-end">
+                        <span className="text-[10px] text-slate-400">FTS:</span>
+                        {message.ftsKeywords.map((kw) => (
+                          <span key={kw} className="px-1 py-0.5 bg-emerald-50 border border-emerald-200 rounded text-[10px] text-emerald-700">
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {message.chunks.map((c, i) => (
-                    <div key={i} className="space-y-0.5">
-                      <p className="text-[10px] font-medium text-slate-500">
-                        {c.source}
-                      </p>
+                    <div key={i} className="space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-[10px] font-medium text-slate-500">{c.source}</p>
+                        {c.by.map((b) => (
+                          <span key={b} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${BADGE[b].className}`}>
+                            {BADGE[b].label}
+                          </span>
+                        ))}
+                      </div>
                       <p className="text-xs text-slate-600 leading-relaxed">
                         {c.excerpt}
                       </p>

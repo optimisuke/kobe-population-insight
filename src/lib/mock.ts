@@ -22,6 +22,7 @@ type MockPattern = {
   searchModes: OrchestratorResult["searchModes"];
   sources: OrchestratorResult["sources"];
   chunks?: OrchestratorResult["chunks"];
+  ftsKeywords?: string[];
 };
 
 const PATTERNS: MockPattern[] = [
@@ -87,14 +88,17 @@ const PATTERNS: MockPattern[] = [
 （これはモックデータです。実際のデータを使うには TiDB Cloud と OpenAI API の設定が必要です）`,
     searchModes: ["fts", "vector"],
     sources: [MOCK_SOURCES[0]],
+    ftsKeywords: ["人口減少", "施策", "若年層", "定着"],
     chunks: [
       {
         source: "第6次神戸市総合基本計画",
+        by: ["fts", "vector"] as ("fts" | "vector")[],
         excerpt:
           "人口減少・少子高齢化が進む中、神戸市は「人口が減少しても活力ある都市」を目標に掲げ、子育て支援の充実、産業振興、三宮再整備などの施策を総合的に推進する。",
       },
       {
         source: "第6次神戸市総合基本計画",
+        by: ["vector"] as ("fts" | "vector")[],
         excerpt:
           "若年層の定着に向けては、UIJターン促進策として住宅取得支援や奨学金返還支援制度を拡充。2030年までに社会増減をプラスに転じることを目標とする。",
       },
@@ -150,8 +154,8 @@ const DEFAULT_MOCK: MockPattern = {
 export function mockOrchestrate(question: string): OrchestratorResult {
   const q = question.toLowerCase();
   const matched = PATTERNS.find((p) => p.keywords.some((kw) => q.includes(kw)));
-  const { answer, searchModes, sources, chunks } = matched ?? DEFAULT_MOCK;
-  return { answer, searchModes, sources, chunks };
+  const { answer, searchModes, sources, chunks, ftsKeywords } = matched ?? DEFAULT_MOCK;
+  return { answer, searchModes, sources, chunks, ftsKeywords };
 }
 
 export function isMockMode(): boolean {

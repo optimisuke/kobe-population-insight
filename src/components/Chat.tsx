@@ -70,6 +70,7 @@ export function Chat() {
           searchModes: data.searchModes,
           sources: data.sources,
           chunks: data.chunks,
+          ftsKeywords: data.ftsKeywords,
           sqlResult: data.sqlResult,
         },
       ]);
@@ -116,6 +117,19 @@ export function Chat() {
 
       {/* チャットエリア */}
       <div className="flex flex-col flex-1 min-w-0 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        {/* チャットヘッダー */}
+        <div className="flex items-center justify-end px-4 py-2 border-b border-slate-200 bg-white">
+          <button
+            onClick={() => setMessages([{
+              role: "assistant",
+              content: "神戸市の人口統計データと政策文書をもとに質問にお答えします。\nSQL・全文検索・ベクトル検索を組み合わせて分析します。",
+            }])}
+            disabled={loading}
+            className="text-xs text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40"
+          >
+            クリア
+          </button>
+        </div>
         {/* メッセージ一覧 */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {messages.map((m, i) => (

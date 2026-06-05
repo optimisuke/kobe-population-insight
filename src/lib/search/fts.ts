@@ -30,13 +30,18 @@ async function extractKeywords(question: string): Promise<string> {
   return res.choices[0].message.content?.trim() ?? question;
 }
 
+export type FtsSearchResult = {
+  chunks: FtsResult[];
+  keywords: string[];
+};
+
 export async function ftsSearch(
   question: string,
   limit = 5
-): Promise<FtsResult[]> {
+): Promise<FtsSearchResult> {
   const raw = await extractKeywords(question);
   const keywords = raw.split(/\s+/).filter(Boolean).slice(0, 5);
-  if (keywords.length === 0) return [];
+  if (keywords.length === 0) return { chunks: [], keywords: [] };
 
   const db = getDb();
 
@@ -56,11 +61,13 @@ export async function ftsSearch(
     { fullResult: true }
   );
 
-  return ((result.rows ?? []) as Record<string, unknown>[]).map((r) => ({
+  const chunks = ((result.rows ?? []) as Record<string, unknown>[]).map((r) => ({
     id: Number(r.id),
     source_title: String(r.source_title),
     source_url: String(r.source_url),
     chunk_text: String(r.chunk_text),
     score: Number(r.score),
   }));
+
+  return { chunks, keywords };
 }
