@@ -1,8 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# kobe-population-insight
 
-## Getting Started
+神戸市の人口統計データ × 政策文書 × AI による洞察アプリ。
 
-First, run the development server:
+**SQL検索 / 全文検索 / ベクトル検索** を TiDB Cloud の単一データベースで実現。
+
+---
+
+## セットアップ
+
+### 1. TiDB Cloud Serverless クラスター作成
+
+1. [TiDB Cloud](https://tidbcloud.com/) でアカウント作成・Serverlessクラスター作成
+2. **Connect > Connect to your cluster > TypeScript** から接続情報を取得
+
+### 2. OpenAI API キー取得
+
+[OpenAI Platform](https://platform.openai.com/api-keys) でAPIキーを発行
+
+### 3. 環境変数設定
+
+```bash
+cp .env.example .env.local
+# .env.local を編集して TIDB_* と OPENAI_API_KEY を設定
+```
+
+### 4. インストール・スキーマ適用・データ投入
+
+```bash
+npm install
+npx tsx scripts/apply-schema.ts
+npx tsx scripts/etl/fetch-population.ts
+npx tsx scripts/etl/import-population.ts
+npx tsx scripts/etl/fetch-policies.ts
+npx tsx scripts/etl/import-policies.ts   # OpenAI API コストが発生
+```
+
+### 5. 開発サーバー起動
+
+```bash
+npm run dev   # → http://localhost:3000
+```
+
+---
+
+## 質問例
+
+- 神戸市はどの年代が流出している？
+- 若者の転出は増えている？
+- 人口は今後どうなる？
+- 神戸市は人口減少をどう捉えている？
+
+---
+
+## システム構成
+
+```
+Next.js / app/api/chat
+  ├─ 質問分析 (GPT-4o-mini)
+  ├─ SQL検索    → population テーブル
+  ├─ 全文検索   → policy_chunks (MATCH AGAINST)
+  ├─ ベクトル検索→ policy_chunks (VEC_COSINE_DISTANCE)
+  └─ 回答生成  (GPT-4o)
+
+TiDB Cloud Serverless
+  ├─ population     (住民基本台帳・転入転出・将来推計)
+  └─ policy_chunks  (政策文書チャンク + VECTOR(1536))
+```
+
+---
+
+## 旧 Getting Started
 
 ```bash
 npm run dev
