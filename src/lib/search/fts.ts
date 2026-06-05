@@ -1,5 +1,6 @@
 /**
- * Full Text Search: TiDB の MATCH AGAINST で政策文書を検索する
+ * Full Text Search: キーワードを LIKE で政策文書を検索する
+ * TiDB Cloud Serverless は MATCH AGAINST 非対応のため LIKE ベースで実装
  */
 
 import { getDb } from "../db";
@@ -33,17 +34,25 @@ export async function ftsSearch(
   question: string,
   limit = 5
 ): Promise<FtsResult[]> {
-  const keywords = await extractKeywords(question);
+  const raw = await extractKeywords(question);
+  const keywords = raw.split(/\s+/).filter(Boolean).slice(0, 5);
+  if (keywords.length === 0) return [];
+
   const db = getDb();
+
+  // キーワードごとに LIKE 条件を作成し、マッチ数をスコアとして使う
+  const likeConditions = keywords.map(() => `chunk_text LIKE ?`).join(" OR ");
+  const scoreExpr = keywords.map(() => `(CASE WHEN chunk_text LIKE ? THEN 1 ELSE 0 END)`).join(" + ");
+  const likeValues = keywords.map((kw) => `%${kw}%`);
 
   const result = await db.execute(
     `SELECT id, source_title, source_url, chunk_text,
-            MATCH(chunk_text) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
+            (${scoreExpr}) AS score
      FROM policy_chunks
-     WHERE MATCH(chunk_text) AGAINST (? IN NATURAL LANGUAGE MODE)
+     WHERE ${likeConditions}
      ORDER BY score DESC
      LIMIT ?`,
-    [keywords, keywords, limit],
+    [...likeValues, ...likeValues, limit],
     { fullResult: true }
   );
 

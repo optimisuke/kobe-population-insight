@@ -27,6 +27,5 @@ CREATE TABLE IF NOT EXISTS policy_chunks (
   source_url   TEXT,
   page_number  INT,
   chunk_text   TEXT          NOT NULL,
-  embedding    VECTOR(1536)  COMMENT 'hnsw(distance=cosine)',
-  FULLTEXT INDEX ft_chunk_text (chunk_text)
+  embedding    VECTOR(1536)  COMMENT 'hnsw(distance=cosine)'
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
